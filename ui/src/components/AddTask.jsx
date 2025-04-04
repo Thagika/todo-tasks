@@ -3,19 +3,33 @@ import { useState } from 'react';
 const AddTask = ({ onTaskAdded }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [error, setError] = useState(null); // To handle errors
+  const [loading, setLoading] = useState(false); // To handle loading state
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true); // Set loading state
 
-    await fetch('http://localhost:8080/api/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description }),
-    });
+    try {
+      const response = await fetch('http://localhost:8080/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description }),
+      });
 
-    setTitle('');
-    setDescription('');
-    onTaskAdded();
+      if (!response.ok) {
+        throw new Error('Failed to add task');
+      }
+
+      setTitle('');
+      setDescription('');
+      onTaskAdded();
+      setError(null); // Clear any previous errors
+    } catch (error) {
+      setError(error.message); // Set error message
+    } finally {
+      setLoading(false); // Reset loading state
+    }
   };
 
   return (
@@ -33,7 +47,10 @@ const AddTask = ({ onTaskAdded }) => {
         value={description}
         onChange={(e) => setDescription(e.target.value)}
       />
-      <button type="submit">Add</button>
+      <button type="submit" disabled={loading}>
+        {loading ? 'Adding...' : 'Add'}
+      </button>
+      {error && <p className="text-red-500">{error}</p>} {/* Display error message */}
     </form>
   );
 };
