@@ -16,39 +16,46 @@ function TaskList() {
   };
 
   useEffect(() => {
-    fetchTasks();
-    window.addEventListener("taskAdded", fetchTasks);
-    return () => window.removeEventListener("taskAdded", fetchTasks);
+    fetchTasks(); // Fetch tasks when the component mounts
+
+    const handleTaskAdded = () => {
+      fetchTasks(); // Re-fetch tasks when a new task is added
+    };
+
+    window.addEventListener("taskAdded", handleTaskAdded); // Listen for task added event
+
+    return () => window.removeEventListener("taskAdded", handleTaskAdded); // Cleanup listener
   }, []);
 
   const toggleDone = async (id) => {
     await fetch(`http://localhost:8080/api/tasks/${id}/toggle`, {
       method: "PUT",
     });
-    fetchTasks();
+    fetchTasks(); // Re-fetch tasks after toggling
   };
 
-  return (
-    <ul className="space-y-2">
-      {tasks.map((task) => (
-        <li
-          key={task.id}
-          className="bg-gray-100 p-3 rounded flex justify-between items-center transition-all hover:bg-green-100"
+return (
+  <ul className="space-y-4">
+    {tasks.map((task) => (
+      <li
+        key={task.id}
+        className="bg-[#d6d6d6] rounded-xl p-4 shadow-[0_4px_30px_rgba(0,0,0,0.15)] rounded-2xl flex items-center justify-between"
+      >
+        <div>
+          <h3 className="font-bold text-lg">{task.title}</h3>
+          <p className="text-sm">{task.description}</p>
+        </div>
+        <button
+          onClick={() => toggleDone(task.id)}
+          className="border border-gray-600 rounded px-4 py-1 hover:bg-gray-200 text-sm"
         >
-          <div>
-            <p className="font-medium">{task.title}</p>
-            <p className="text-sm text-gray-600">{task.description}</p>
-          </div>
-          <button
-            className="text-green-600 hover:text-green-800 font-semibold"
-            onClick={() => toggleDone(task.id)}
-          >
-            Done
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
+          Done
+        </button>
+      </li>
+    ))}
+  </ul>
+);
+
 }
 
 export default TaskList;
