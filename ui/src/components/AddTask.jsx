@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 const AddTask = ({ onTaskAdded }) => {
   const [title, setTitle] = useState('');
@@ -43,24 +44,26 @@ const AddTask = ({ onTaskAdded }) => {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required
-        className="w-full p-2 border [0_4px_30px_rgba(0,0,0,0.1)] rounded 2xl mb-2"
+        className="w-full p-2 border rounded 2xl mb-2"
       />
       <textarea
         placeholder="Description"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        className="w-full p-2 border [0_4px_30px_rgba(0,0,0,0.15)] rounded-2xl mb-2 h-24" // Set height to double that of the title textbox
+        className="w-full p-2 border rounded-2xl mb-2 h-24"
       />
       <div className="flex justify-end">
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-1/3" // Set width to 30%
-      >
-        {loading ? 'Adding...' : 'Add'}
-      </button>
+        <motion.button
+          type="submit"
+          disabled={loading}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-1/3"
+          whileHover={{ scale: 1.05 }} // Scale up on hover
+          whileTap={{ scale: 0.95 }} // Scale down on click
+        >
+          {loading ? 'Adding...' : 'Add'}
+        </motion.button>
       </div>
-      {error && <p className="text-red-500 mt-2">{error}</p>} {/* Display error message */}
+      {error && <p className="text-red-500 mt-2">{error}</p>}
     </form>
   );
 };

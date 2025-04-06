@@ -14,8 +14,15 @@ A brief description of your project, what it does, and its purpose.
 Instructions for installing the project dependencies and setting up the application. For example:
 ```bash
 git clone https://github.com/Thagika/todo-tasks.git
-cd 
+cd todo-app
 docker-compose up --build
+
+
+if the build has been done before 
+docker compose up -d 
+
+docker compose up -d mysql #to only start the mysql server 
+docker compose up -d mysql
 
 access the backend and frontend using the following 
 Access the backend at http://localhost:8080
