@@ -40,3 +40,8 @@ POST /api/tasks: Create a new task
 PUT /api/tasks/{id}: Update an existing task
 DELETE /api/tasks/{id}: Delete a task
 
+
+#testing
+
+docker-compose -f docker-compose.test.yml up --build            #build the testings
+docker exec -it todo-app-frontend-1 npm run test            #testing frontend

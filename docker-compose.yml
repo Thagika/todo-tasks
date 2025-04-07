@@ -37,6 +37,8 @@ services:
       - "3000:80"
     environment:
       - VITE_TODO_API=http://backend:8080
+    depends_on:
+      - backend  # Ensure backend starts before frontend
     networks:
       - app-network
 
