@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 
+const apiUrl = import.meta.env.VITE_TODO_API;
+
 const AddTask = ({ onTaskAdded }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -12,7 +14,7 @@ const AddTask = ({ onTaskAdded }) => {
     setLoading(true); // Set loading state
 
     try {
-      const response = await fetch('http://localhost:8080/api/tasks', {
+      const response = await fetch(`${apiUrl}/api/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, description }),

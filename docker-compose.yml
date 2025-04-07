@@ -35,6 +35,8 @@ services:
       context: ./ui
     ports:
       - "3000:80"
+    environment:
+      - VITE_TODO_API=http://backend:8080
     networks:
       - app-network
 
