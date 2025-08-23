@@ -14,9 +14,4 @@ public class BeansConfig {
     public TaskValidator taskValidator() {
         return new TaskValidator();
     }
-
-    @Bean
-    public TaskService taskService(TaskRepository repository, TaskValidator validator) {
-        return new DefaultTaskService(repository, validator);
-    }
 }
