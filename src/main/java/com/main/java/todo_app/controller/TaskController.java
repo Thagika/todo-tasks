@@ -5,6 +5,7 @@ import com.main.java.todo_app.domain.TaskId;
 import com.main.java.todo_app.service.TaskService;
 import com.main.java.todo_app.web.dto.CreateTaskRequest;
 import com.main.java.todo_app.web.dto.TaskResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,13 +23,19 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<TaskResponse> createTask(@RequestBody CreateTaskRequest request) {
+    public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody CreateTaskRequest request) {
         Task task = taskService.createTask(request.getTitle(), request.getDescription());
         return ResponseEntity.ok(new TaskResponse(task));
     }
 
+
+
     @PostMapping("/{id}/complete")
-    public ResponseEntity<TaskResponse> completeTask(@PathVariable String id) {
+    public ResponseEntity<TaskResponse> completeTask(@PathVariable("id") String id) {
+        if (!id.matches("\\d+")) {
+            return ResponseEntity.badRequest().build();
+        }
+
         Task nextTask = taskService.completeTaskAndReturnNext(TaskId.fromString(id));
         return ResponseEntity.ok(nextTask != null ? new TaskResponse(nextTask) : null);
     }
