@@ -1,20 +1,4 @@
 services:
-  backend:
-    build: .
-    container_name: todo-backend
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/todo_db
-      SPRING_DATASOURCE_USERNAME: todo_user
-      SPRING_DATASOURCE_PASSWORD: todo_pass
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-    ports:
-      - "8080:8080"
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - app-network
-
   mysql:
     image: mysql:8.0
     container_name: todo-mysql
@@ -29,28 +13,46 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
-      - app-network
+      - todo-net
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "todo_user", "-ptodo_pass" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "todo_user", "-ptodo_pass"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  backend:
+    build: .
+    container_name: todo-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/todo_db
+      SPRING_DATASOURCE_USERNAME: todo_user
+      SPRING_DATASOURCE_PASSWORD: todo_pass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - todo-net
 
   frontend:
     build:
       context: ./ui
+      dockerfile: Dockerfile
+    container_name: todo-frontend
     ports:
       - "3000:80"
-    environment:
-      - VITE_TODO_API=http://backend:8080
     depends_on:
       - backend
     networks:
-      - app-network
+      - todo-net
+    environment:
+      VITE_TODO_API: http://backend:8080/api
+
 
 volumes:
   mysql_data:
 
 networks:
-  app-network:
+  todo-net:

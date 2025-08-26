@@ -3,20 +3,23 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const apiUrl = import.meta.env.VITE_TODO_API;
 
-function TaskList() {
+function TaskList({ onTasksUpdate }) {
   const [tasks, setTasks] = useState([]);
   const [completedTaskId, setCompletedTaskId] = useState(null);
   const [prevTasks, setPrevTasks] = useState([]);
 
   const fetchTasks = async () => {
     try {
-      const res = await fetch(`${apiUrl}/api/tasks`);
+      const res = await fetch(`${apiUrl}/api/tasks/recent`);
+      if (!res.ok) throw new Error("Failed to fetch tasks");
       const data = await res.json();
-      const incomplete = data.filter((t) => t.isCompleted === 0).sort((a, b) => b.id - a.id);
-      const newList = incomplete.slice(0, 5);
+      setPrevTasks(tasks);
+      setTasks(data);
 
-      setPrevTasks(tasks); // Store previous list before setting new one
-      setTasks(newList);
+
+      if (onTasksUpdate) {
+        onTasksUpdate(data.length > 0);
+      }
     } catch (err) {
       console.error("Failed to fetch tasks", err);
     }
@@ -30,37 +33,26 @@ function TaskList() {
     };
 
     window.addEventListener("taskAdded", handleTaskAdded);
-
     return () => window.removeEventListener("taskAdded", handleTaskAdded);
   }, []);
 
-  const toggleDone = async (id) => {
+  const completeTask = async (id) => {
     setCompletedTaskId(id);
-    await fetch(`${apiUrl}/api/tasks/${id}/toggle`, { method: "PUT" });
+    await fetch(`${apiUrl}/api/tasks/${id}/complete`, { method: "POST" });
     fetchTasks();
   };
 
   const getEnterAnimation = (taskId) => {
     if (!prevTasks.length || tasks.length === 0) return { opacity: 1, y: 0 };
-
     const wasMissingBefore = !prevTasks.some((t) => t.id === taskId);
-    if (wasMissingBefore) {
-      return {
-        opacity: 0,
-        y: 100, // from offscreen bottom
-      };
-    }
-
-    return {
-      opacity: 1,
-      y: 0,
-    };
+    if (wasMissingBefore) return { opacity: 0, y: 100 };
+    return { opacity: 1, y: 0 };
   };
 
   return (
     <ul className="space-y-4">
       <AnimatePresence>
-        {tasks.map((task, index) => {
+        {tasks.map((task) => {
           const isCompleted = completedTaskId === task.id;
           return (
             <motion.li
@@ -80,7 +72,7 @@ function TaskList() {
                 <p className="text-sm">{task.description}</p>
               </div>
               <button
-                onClick={() => toggleDone(task.id)}
+                onClick={() => completeTask(task.id)}
                 className="border border-gray-600 rounded px-4 py-1 hover:bg-gray-200 text-sm"
               >
                 Done

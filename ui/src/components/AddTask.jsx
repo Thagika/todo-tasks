@@ -3,15 +3,15 @@ import { motion } from 'framer-motion';
 
 const apiUrl = import.meta.env.VITE_TODO_API;
 
-const AddTask = ({ onTaskAdded }) => {
+const AddTask = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [error, setError] = useState(null); // To handle errors
-  const [loading, setLoading] = useState(false); // To handle loading state
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Set loading state
+    setLoading(true);
 
     try {
       const response = await fetch(`${apiUrl}/api/tasks`, {
@@ -26,14 +26,14 @@ const AddTask = ({ onTaskAdded }) => {
 
       setTitle('');
       setDescription('');
-      setError(null); // Clear any previous errors
+      setError(null);
 
-      // Dispatch a custom event when a task is added
+      // Let App + TaskList know a new task is added
       window.dispatchEvent(new Event('taskAdded'));
     } catch (error) {
-      setError(error.message); // Set error message
+      setError(error.message);
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
@@ -46,7 +46,7 @@ const AddTask = ({ onTaskAdded }) => {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required
-        className="w-full p-2 border rounded 2xl mb-2"
+        className="w-full p-2 border rounded-2xl mb-2"
       />
       <textarea
         placeholder="Description"
@@ -59,8 +59,8 @@ const AddTask = ({ onTaskAdded }) => {
           type="submit"
           disabled={loading}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-1/3"
-          whileHover={{ scale: 1.05 }} // Scale up on hover
-          whileTap={{ scale: 0.95 }} // Scale down on click
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           {loading ? 'Adding...' : 'Add'}
         </motion.button>

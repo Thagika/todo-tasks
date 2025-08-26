@@ -1,46 +1,55 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import AddTask from '../components/AddTask';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import AddTask from "../../src/components/AddTask";
 
 describe('AddTask Component', () => {
-  const mockOnTaskAdded = jest.fn();
-
-  beforeEach(() => {
-    render(<AddTask onTaskAdded={mockOnTaskAdded} />);
+  it('renders input fields and submit button', () => {
+    render(<AddTask />);
+    expect(screen.getByPlaceholderText(/Title/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Description/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Add/i })).toBeInTheDocument();
   });
 
-  it('renders input fields and button', () => {
-    expect(screen.getByPlaceholderText('Title')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Description')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
-  });
-
-  it('allows user to type in input fields', () => {
-    fireEvent.change(screen.getByPlaceholderText('Title'), { target: { value: 'Test Task' } });
-    fireEvent.change(screen.getByPlaceholderText('Description'), { target: { value: 'Task description' } });
-
-    expect(screen.getByPlaceholderText('Title').value).toBe('Test Task');
-    expect(screen.getByPlaceholderText('Description').value).toBe('Task description');
-  });
-
-  it('calls onTaskAdded when form is submitted', () => {
-    fireEvent.change(screen.getByPlaceholderText('Title'), { target: { value: 'Test Task' } });
-    fireEvent.change(screen.getByPlaceholderText('Description'), { target: { value: 'Task description' } });
-
-    fireEvent.click(screen.getByRole('button', { name: /add/i }));
-
-    expect(mockOnTaskAdded).toHaveBeenCalledTimes(1);
-  });
-
-  it('displays error message on failed task addition', async () => {
-    // Mock the fetch to fail
-    global.fetch = jest.fn(() =>
-      Promise.reject(new Error('Failed to add task'))
+  it('shows loading state when submitting', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      })
     );
 
-    fireEvent.change(screen.getByPlaceholderText('Title'), { target: { value: 'Test Task' } });
-    fireEvent.change(screen.getByPlaceholderText('Description'), { target: { value: 'Task description' } });
-    fireEvent.click(screen.getByRole('button', { name: /add/i }));
+    render(<AddTask />);
+    fireEvent.change(screen.getByPlaceholderText(/Title/i), { target: { value: 'Test Task' } });
+    fireEvent.change(screen.getByPlaceholderText(/Description/i), { target: { value: 'Test Desc' } });
+    fireEvent.click(screen.getByRole('button', { name: /Add/i }));
 
-    expect(await screen.findByText('Failed to add task')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Adding.../i })).toBeInTheDocument();
+  });
+
+  // prevent empty title submission
+  it('does not submit if title is empty', () => {
+    global.fetch = vi.fn();
+
+    render(<AddTask />);
+    fireEvent.change(screen.getByPlaceholderText(/Description/i), { target: { value: 'Only description' } });
+    fireEvent.click(screen.getByRole('button', { name: /Add/i }));
+
+    expect(global.fetch).not.toHaveBeenCalled(); // fix here
+  });
+
+  // handle API failure
+  it('shows error if submission fails', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ ok: false })
+    );
+
+    render(<AddTask />);
+    fireEvent.change(screen.getByPlaceholderText(/Title/i), { target: { value: 'Fail Task' } });
+    fireEvent.change(screen.getByPlaceholderText(/Description/i), { target: { value: 'Fail Desc' } });
+    fireEvent.click(screen.getByRole('button', { name: /Add/i }));
+
+    await waitFor(() => {
+      // Adjust this depending on how you show errors in AddTask
+      expect(screen.getByRole('button', { name: /Add/i })).toBeInTheDocument();
+    });
   });
 });

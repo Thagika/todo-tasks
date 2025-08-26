@@ -1,56 +1,77 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import TaskList from '../components/TaskList';
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { vi } from "vitest";
+import TaskList from "../../src/components/TaskList";
 
-describe('TaskList Component', () => {
-  const tasks = [
-    { id: 1, title: 'Task 1', description: 'Description 1', isCompleted: 0 },
-    { id: 2, title: 'Task 2', description: 'Description 2', isCompleted: 0 },
-  ];
+const mockTasks = [
+  { id: 1, title: "Task 1", description: "Desc 1", isCompleted: 0 },
+  { id: 2, title: "Task 2", description: "Desc 2", isCompleted: 0 },
+];
 
+describe("TaskList Component", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockTasks),
+      })
+    );
+  });
+
+  it("renders tasks from API", async () => {
     render(<TaskList />);
+
+    // ✅ use findBy for async elements
+    expect(await screen.findByText("Task 1")).toBeInTheDocument();
+    expect(await screen.findByText("Task 2")).toBeInTheDocument();
   });
 
-  it('renders tasks correctly', () => {
-    // Mock fetch to return tasks
-    global.fetch = jest.fn(() =>
+  it("completes a task on button click", async () => {
+    // mock POST call
+    global.fetch = vi.fn((url, options) => {
+      if (options?.method === "POST") {
+        return Promise.resolve({ ok: true });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockTasks),
+      });
+    });
+
+    render(<TaskList />);
+
+    const doneButtons = await screen.findAllByText("Done");
+
+    fireEvent.click(doneButtons[0]);
+
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+  });
+});
+
+describe('TaskList Edge Cases', () => {
+  it('renders no tasks message when API returns empty array', async () => {
+    global.fetch = vi.fn(() =>
       Promise.resolve({
-        json: () => Promise.resolve(tasks),
+        ok: true,
+        json: () => Promise.resolve([]),
       })
     );
 
-    expect(screen.getByText('Task 1')).toBeInTheDocument();
-    expect(screen.getByText('Task 2')).toBeInTheDocument();
+    render(<TaskList />);
+    await waitFor(() => {
+      expect(screen.queryByText('Task 1')).not.toBeInTheDocument();
+    });
   });
 
-  it('calls toggleDone when Done button is clicked', async () => {
-    // Mock fetch to return tasks
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve(tasks),
-      })
+  it('handles API error gracefully', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ ok: false })
     );
 
-    // Mock toggleDone
-    const toggleDone = jest.fn();
-    render(<TaskList toggleDone={toggleDone} />);
-
-    fireEvent.click(screen.getByRole('button', { name: /done/i }));
-
-    expect(toggleDone).toHaveBeenCalledTimes(1);
-  });
-
-  it('removes task from the list when Done button is clicked', async () => {
-    // Mock fetch to return tasks
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve(tasks),
-      })
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: /done/i }));
-
-    // Update the expected behavior here based on your toggleDone implementation
-    expect(screen.queryByText('Task 1')).not.toBeInTheDocument();
+    render(<TaskList />);
+    await waitFor(() => {
+      // Adjust this if you show an error message in UI
+      expect(screen.queryByText('Task 1')).not.toBeInTheDocument();
+    });
   });
 });

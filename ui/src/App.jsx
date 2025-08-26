@@ -1,29 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AddTask from './components/AddTask';
 import TaskList from './components/TaskList';
 
-const App = () => {
-  const [taskAdded, setTaskAdded] = useState(false);
+const apiUrl = import.meta.env.VITE_TODO_API;
 
-  const handleTaskAdded = () => {
-    setTaskAdded(!taskAdded); // To trigger re-fetching in TaskList
-  };
+const App = () => {
+  const [hasTasks, setHasTasks] = useState(false);
+  const [reloadFlag, setReloadFlag] = useState(false);
+
+  useEffect(() => {
+    const fetchRecent = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/api/tasks/recent`);
+        if (res.ok) {
+          const data = await res.json();
+          setHasTasks(data.length > 0);
+        }
+      } catch (err) {
+        console.error('Failed to fetch recent tasks', err);
+      }
+    };
+
+    fetchRecent();
+
+    const handleTaskAdded = () => {
+      setReloadFlag((prev) => !prev);
+      setHasTasks(true);
+    };
+    window.addEventListener('taskAdded', handleTaskAdded);
+
+    return () => window.removeEventListener('taskAdded', handleTaskAdded);
+  }, []);
 
   return (
-    <div className="flex m-[5%]"> {/* 5% margin on all sides */}
-      <div className="w-[50%]"> {/* Left side for AddTask */}
-        <AddTask onTaskAdded={handleTaskAdded} />
+    <div className="flex mt-[3%] ml-[5%] mr-[5%] w-[95%] h-full overflow-hidden">
+      <div className={hasTasks ? "w-[50%] h-full" : "w-full h-full pl-[30%] pr-[30%]"}>
+        <AddTask />
       </div>
 
-      {/* Vertical Divider */}
-      <div className="border-l-2 [0_4px_30px_rgba(0,0,0,0.1)] border-gray-300 mx-[5%]" style={{ height: 'auto' }}></div>
-
-      <div className="w-[50%] p-6"> {/* Right side for TaskList */}
-        <TaskList key={taskAdded} />
-      </div>
+      {hasTasks && (
+        <>
+          <div className="border-l-2 border-gray-300 mx-[5%] overflow-hidden" style={{ height: 'auto' }}></div>
+          <div className="w-[50%] p-6">
+            <TaskList key={reloadFlag} onTasksUpdate={setHasTasks} />
+          </div>
+        </>
+      )}
     </div>
   );
-
 };
 
 export default App;

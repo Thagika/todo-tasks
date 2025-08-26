@@ -2,46 +2,32 @@ To DO Tasks
 
 A brief description of your project, what it does, and its purpose.
 
-## Table of Contents
-- [Installation](#installation)
-- [Usage](#usage)
-- [Features](#features)
-- [API Endpoints](#api-endpoints)
-- [Testing](#testing)
-
 ## Installation
 
 Instructions for installing the project dependencies and setting up the application. For example:
+
+Prerequisites
+
+Make sure the system has:
+
+Docker installed
+Bash/GNU tools
+
 ```bash
 git clone https://github.com/Thagika/todo-tasks.git
+
 cd todo-app
-docker-compose up --build
+./run.sh
 
 
-if the build has been done before 
-docker compose up -d 
+```
 
-docker compose up -d mysql #to only start the mysql server 
-docker compose up -d mysql
+Access the Application
+Frontend: http://localhost:3000
+Backend API: http://localhost:8080/api
+Database: mysql://localhost:3306
+user: todo_user
+password: todo_pass
 
-access the backend and frontend using the following 
-Access the backend at http://localhost:8080
-Access the frontend at http://localhost:3000
-
-
-Features:-
-lets you add new tasks and on the right side of the application you are able to see the most recent 5 tasks
-
-
-endpoints tested via Postman
-
-GET /api/tasks: Retrieve all tasks
-POST /api/tasks: Create a new task
-PUT /api/tasks/{id}: Update an existing task
-DELETE /api/tasks/{id}: Delete a task
-
-
-#testing
-
-docker-compose -f docker-compose.test.yml up --build            #build the testings
-docker exec -it todo-app-frontend-1 npm run test            #testing frontend
+use this to shutdown the application
+docker-compose down
